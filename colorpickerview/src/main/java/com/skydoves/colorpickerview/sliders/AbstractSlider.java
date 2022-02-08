@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -32,6 +33,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.DimenRes;
@@ -39,6 +41,7 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.FloatRange;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+
 import com.skydoves.colorpickerview.ActionMode;
 import com.skydoves.colorpickerview.ColorPickerView;
 
@@ -57,6 +60,8 @@ abstract class AbstractSlider extends FrameLayout {
   protected int color = Color.WHITE;
   protected ImageView selector;
   protected String preferenceName;
+  protected boolean roundCorners;
+  protected Rect insets;
 
   public AbstractSlider(Context context) {
     super(context);
@@ -108,7 +113,7 @@ abstract class AbstractSlider extends FrameLayout {
     this.borderPaint.setStyle(Paint.Style.STROKE);
     this.borderPaint.setStrokeWidth(borderSize);
     this.borderPaint.setColor(borderColor);
-    this.setBackgroundColor(Color.WHITE);
+    setWillNotDraw(false);
 
     selector = new ImageView(getContext());
     if (selectorDrawable != null) {
@@ -123,8 +128,20 @@ abstract class AbstractSlider extends FrameLayout {
     super.onDraw(canvas);
     float width = getMeasuredWidth();
     float height = getMeasuredHeight();
-    canvas.drawRect(0, 0, width, height, colorPaint);
-    canvas.drawRect(0, 0, width, height, borderPaint);
+
+    float left = insets != null ? insets.left : 0;
+    float top = insets != null ? insets.top : 0;
+    float right = width - (insets != null ? insets.right : 0);
+    float bottom = height - (insets != null ? insets.bottom : 0);
+
+    if (roundCorners) {
+      float radius = (bottom - top) / 2f;
+      canvas.drawRoundRect(left, top, right, bottom, radius, radius, colorPaint);
+      canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
+    } else {
+      canvas.drawRect(left, top, right, bottom, colorPaint);
+      canvas.drawRect(left, top, right, bottom, borderPaint);
+    }
   }
 
   /** called by {@link ColorPickerView} whenever {@link ColorPickerView} is triggered. */
@@ -366,5 +383,23 @@ abstract class AbstractSlider extends FrameLayout {
    */
   public void setPreferenceName(String preferenceName) {
     this.preferenceName = preferenceName;
+  }
+
+  public void setRoundCorners(boolean roundCorners) {
+    this.roundCorners = roundCorners;
+    invalidate();
+  }
+
+  public boolean isRoundCorners() {
+    return roundCorners;
+  }
+
+  public Rect getInsets() {
+    return insets;
+  }
+
+  public void setInsets(Rect insets) {
+    this.insets = insets;
+    invalidate();
   }
 }
