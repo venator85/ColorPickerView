@@ -23,8 +23,10 @@ import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Shader;
 import android.util.AttributeSet;
+
 import androidx.annotation.ColorInt;
 import androidx.appcompat.content.res.AppCompatResources;
+
 import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
 
@@ -69,7 +71,7 @@ public class BrightnessSlideBar extends AbstractSlider {
       }
       if (a.hasValue(R.styleable.BrightnessSlideBar_borderSize_BrightnessSlider)) {
         borderSize =
-            a.getInt(R.styleable.BrightnessSlideBar_borderSize_BrightnessSlider, borderSize);
+            a.getDimensionPixelSize(R.styleable.BrightnessSlideBar_borderSize_BrightnessSlider, borderSize);
       }
     } finally {
       a.recycle();

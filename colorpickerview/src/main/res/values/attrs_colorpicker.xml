@@ -29,19 +29,19 @@
   </declare-styleable>
   <declare-styleable name="AlphaSlideBar">
     <!-- sets a customized selector drawable. -->
-    <attr name="selector_AlphaSlideBar" format="integer" />
+    <attr name="selector_AlphaSlideBar" format="reference" />
     <!-- sets a color of the border. -->
     <attr name="borderColor_AlphaSlideBar" format="color" />
     <!-- sets a size of the border. -->
-    <attr name="borderSize_AlphaSlideBar" format="integer" />
+    <attr name="borderSize_AlphaSlideBar" format="dimension|reference" />
   </declare-styleable>
   <declare-styleable name="BrightnessSlideBar">
     <!-- sets a customized selector drawable. -->
-    <attr name="selector_BrightnessSlider" format="integer" />
+    <attr name="selector_BrightnessSlider" format="reference" />
     <!-- sets a color of the border. -->
     <attr name="borderColor_BrightnessSlider" format="color" />
     <!-- sets a size of the border. -->
-    <attr name="borderSize_BrightnessSlider" format="integer" />
+    <attr name="borderSize_BrightnessSlider" format="dimension|reference" />
   </declare-styleable>
   <declare-styleable name="AlphaTileView">
     <!-- sets width/height square size of the title. -->

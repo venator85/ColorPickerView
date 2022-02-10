@@ -25,8 +25,10 @@ import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Shader;
 import android.util.AttributeSet;
+
 import androidx.annotation.ColorInt;
 import androidx.appcompat.content.res.AppCompatResources;
+
 import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.preference.ColorPickerPreferenceManager;
 
@@ -69,7 +71,7 @@ public class AlphaSlideBar extends AbstractSlider {
         borderColor = a.getColor(R.styleable.AlphaSlideBar_borderColor_AlphaSlideBar, borderColor);
       }
       if (a.hasValue(R.styleable.AlphaSlideBar_borderSize_AlphaSlideBar)) {
-        borderSize = a.getInt(R.styleable.AlphaSlideBar_borderSize_AlphaSlideBar, borderSize);
+        borderSize = a.getDimensionPixelSize(R.styleable.AlphaSlideBar_borderSize_AlphaSlideBar, borderSize);
       }
     } finally {
       a.recycle();
