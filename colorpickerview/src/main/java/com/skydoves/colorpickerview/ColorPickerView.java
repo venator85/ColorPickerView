@@ -36,6 +36,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.FloatRange;
@@ -49,6 +50,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
+
 import com.skydoves.colorpickerview.flag.FlagMode;
 import com.skydoves.colorpickerview.flag.FlagView;
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
@@ -76,6 +78,7 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
   private ImageView palette;
   private ImageView selector;
   private FlagView flagView;
+  private RingGlowView ringGlowView;
   private Drawable paletteDrawable;
   private Drawable selectorDrawable;
   private AlphaSlideBar alphaSlideBar;
@@ -315,6 +318,10 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
     this.selectedPoint = PointMapper.getColorPoint(this, new Point(snapPoint.x, snapPoint.y));
     setCoordinate(snapPoint.x, snapPoint.y);
 
+    if (ringGlowView != null) {
+      ringGlowView.setGlowColor(pixelColor);
+    }
+
     if (actionMode == ActionMode.LAST) {
       notifyToFlagView(this.selectedPoint);
       if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -386,6 +393,10 @@ public class ColorPickerView extends FrameLayout implements LifecycleObserver {
       }
     }
     return 0;
+  }
+
+  public void setRingGlowView(RingGlowView ringGlowView) {
+    this.ringGlowView = ringGlowView;
   }
 
   /**
