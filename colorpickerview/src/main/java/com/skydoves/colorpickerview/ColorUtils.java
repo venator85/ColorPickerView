@@ -17,11 +17,13 @@
 package com.skydoves.colorpickerview;
 
 import android.graphics.Color;
+
 import androidx.annotation.ColorInt;
+
 import java.util.Locale;
 
 /** ColorUtils a util class for changing the form of colors. */
-class ColorUtils {
+public class ColorUtils {
   /** changes color to string hex code. */
   public static String getHexCode(@ColorInt int color) {
     int a = Color.alpha(color);
@@ -39,5 +41,12 @@ class ColorUtils {
     argb[2] = Color.green(color);
     argb[3] = Color.blue(color);
     return argb;
+  }
+
+  public static int getPureColor(@ColorInt int color) {
+    int r = Color.alpha(color);
+    int g = Color.red(color);
+    int b = Color.green(color);
+    return (r << 16) | (g << 8) | b;
   }
 }

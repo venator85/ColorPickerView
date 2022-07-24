@@ -23,6 +23,9 @@ import androidx.annotation.ColorInt;
  * triggered.
  */
 public interface ColorListener extends ColorPickerViewListener {
+  default void onUserStartedDragging() {}
+  default void onUserStoppedDragging() {}
+
   /**
    * invoked by {@link com.skydoves.colorpickerview.ColorPickerView}.
    *
