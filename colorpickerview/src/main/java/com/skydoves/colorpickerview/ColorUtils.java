@@ -44,9 +44,9 @@ public class ColorUtils {
   }
 
   public static int getPureColor(@ColorInt int color) {
-    int r = Color.alpha(color);
-    int g = Color.red(color);
-    int b = Color.green(color);
+    int r = Color.red(color);
+    int g = Color.green(color);
+    int b = Color.blue(color);
     return (r << 16) | (g << 8) | b;
   }
 }

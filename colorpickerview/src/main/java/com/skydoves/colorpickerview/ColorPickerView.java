@@ -130,7 +130,7 @@ public class ColorPickerView extends FrameLayout {
     if (selectorDrawable != null) {
       selector.setImageDrawable(selectorDrawable);
     } else {
-      selector.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.wheel));
+      selector.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.colorpicker_thumb));
     }
     LayoutParams selectorParam = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     if (selectorSize != 0) {

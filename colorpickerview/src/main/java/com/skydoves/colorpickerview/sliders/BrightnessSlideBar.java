@@ -43,8 +43,6 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
-import com.skydoves.colorpickerview.ColorPickerView;
-import com.skydoves.colorpickerview.ColorUtils;
 import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.listeners.BrightnessListener;
 
@@ -115,9 +113,10 @@ public final class BrightnessSlideBar extends FrameLayout {
 		setWillNotDraw(false);
 
 		selector = new ImageView(getContext());
-		if (selectorDrawable != null) {
-			setSelectorDrawable(selectorDrawable);
+		if (selectorDrawable == null) {
+			selectorDrawable = AppCompatResources.getDrawable(getContext(), R.drawable.brightness_slider_thumb);
 		}
+		setSelectorDrawable(selectorDrawable);
 	}
 
 	@Override
@@ -133,20 +132,6 @@ public final class BrightnessSlideBar extends FrameLayout {
 
 	public BrightnessListener getBrightnessListener() {
 		return brightnessListener;
-	}
-
-	/**
-	 * update paint color whenever the triggered colors are changed.
-	 */
-	private void updatePaint(Paint colorPaint) {
-		float[] hsv = new float[3];
-		Color.colorToHSV(color, hsv);
-		hsv[2] = 0;
-		int startColor = Color.HSVToColor(hsv);
-		hsv[2] = 1;
-		int endColor = Color.HSVToColor(hsv);
-		Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), startColor, endColor, Shader.TileMode.CLAMP);
-		colorPaint.setShader(shader);
 	}
 
 	@Override
@@ -170,18 +155,10 @@ public final class BrightnessSlideBar extends FrameLayout {
 		}
 	}
 
-	/**
-	 * called by {@link ColorPickerView} whenever {@link ColorPickerView} is triggered.
-	 */
-	public void setColor(int color) {
-		this.color = ColorUtils.getPureColor(color);
-		updatePaint(colorPaint);
+	public void setBgColors(int[] colors) {
+		Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), colors, null, Shader.TileMode.CLAMP);
+		colorPaint.setShader(shader);
 		invalidate();
-	}
-
-	@ColorInt
-	public int getColor() {
-		return color;
 	}
 
 	@SuppressLint("ClickableViewAccessibility")
@@ -225,22 +202,21 @@ public final class BrightnessSlideBar extends FrameLayout {
 	}
 
 	private void updateValue(float x) {
-		selectorPosition = computeSelectorPositionFromTouch(x);
-		selector.setX(getAvailableWidth() * selectorPosition);
-		fireListener(selectorPosition, true);
-	}
-
-	private float computeSelectorPositionFromTouch(float x) {
+		float touchXCenteredInSelector = x - getSelectorSize() / 2f;
 		float w = getAvailableWidth();
+
 		float newVal;
-		if (x <= 0) {
+		if (touchXCenteredInSelector <= 0) {
 			newVal = 0f;
-		} else if (x > w) {
+		} else if (touchXCenteredInSelector > w) {
 			newVal = 1f;
 		} else {
-			newVal = x / w;
+			newVal = touchXCenteredInSelector / w;
 		}
-		return newVal;
+		selectorPosition = newVal;
+
+		selector.setX(getAvailableWidth() * selectorPosition);
+		fireListener(selectorPosition, true);
 	}
 
 	private float getAvailableWidth() {
@@ -249,7 +225,7 @@ public final class BrightnessSlideBar extends FrameLayout {
 
 	public void setSelectorPosition(@FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
 		this.selectorPosition = Math.min(selectorPosition, 1.0f);
-		selector.setX(getAvailableWidth() * selectorPosition);
+		selector.setX(getAvailableWidth() * this.selectorPosition);
 		fireListener(selectorPosition, false);
 	}
 
