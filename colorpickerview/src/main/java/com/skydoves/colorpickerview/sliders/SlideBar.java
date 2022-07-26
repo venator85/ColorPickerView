@@ -1,19 +1,3 @@
-/*
- * Designed and developed by 2017 skydoves (Jaewoong Eum)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.skydoves.colorpickerview.sliders;
 
 import android.annotation.SuppressLint;
@@ -34,88 +18,105 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import androidx.annotation.ColorInt;
-import androidx.annotation.ColorRes;
 import androidx.annotation.DimenRes;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.skydoves.colorpickerview.R;
-import com.skydoves.colorpickerview.listeners.BrightnessListener;
+import com.skydoves.colorpickerview.SizeUtils;
 
-public final class BrightnessSlideBar extends FrameLayout {
-	private Paint colorPaint;
-	private Paint borderPaint;
+public final class SlideBar extends FrameLayout {
+	public interface Listener {
+		default void onUserStartedDragging() {
+		}
+
+		default void onUserStoppedDragging() {
+		}
+
+		void onValueChanged(@FloatRange(from = 0f, to = 1f) float value, boolean fromUser);
+	}
+
+	private final Paint colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
 	private float selectorPosition = 0.5f;
 	private Drawable selectorDrawable;
-	private int borderSize = 2;
-	private int borderColor = Color.BLACK;
-	private int color = Color.WHITE;
-	private ImageView selector;
+	private final ImageView selector = new ImageView(getContext());
+
+	private int borderSize;
+	private int borderColor;
 	private boolean roundCorners;
+
+	private int[] bgColors;
+	private boolean bgDirty;
 
 	private Rect insets = new Rect();
 
-	private BrightnessListener brightnessListener;
+	private Listener listener;
 
-	public BrightnessSlideBar(Context context) {
+	public SlideBar(Context context) {
 		super(context);
-		onCreate();
+		init(null);
 	}
 
-	public BrightnessSlideBar(Context context, AttributeSet attrs) {
+	public SlideBar(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		getAttrs(attrs);
-		onCreate();
+		init(attrs);
 	}
 
-	public BrightnessSlideBar(Context context, AttributeSet attrs, int defStyleAttr) {
+	public SlideBar(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
-		getAttrs(attrs);
-		onCreate();
+		init(attrs);
 	}
 
-	public BrightnessSlideBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+	public SlideBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
 		super(context, attrs, defStyleAttr, defStyleRes);
-		getAttrs(attrs);
-		onCreate();
+		init(attrs);
 	}
 
-	private void getAttrs(AttributeSet attrs) {
-		TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.BrightnessSlideBar);
-		try {
-			if (a.hasValue(R.styleable.BrightnessSlideBar_selector_BrightnessSlider)) {
-				int resourceId = a.getResourceId(R.styleable.BrightnessSlideBar_selector_BrightnessSlider, -1);
-				if (resourceId != -1) {
-					selectorDrawable = AppCompatResources.getDrawable(getContext(), resourceId);
-				}
+	private void init(@Nullable AttributeSet attrs) {
+		final int defaultBorderSize = SizeUtils.dp2Px(getContext(), 1);
+		final int defaultSelectorDrawable = R.drawable.brightness_slider_thumb;
+		final int defaultBorderColor = Color.BLACK;
+		final boolean defaultRoundCorners = true;
+		final int defaultInsetTop = SizeUtils.dp2Px(getContext(), 8);
+		final int defaultInsetBottom = SizeUtils.dp2Px(getContext(), 8);
+		final int defaultInsetLeft = SizeUtils.dp2Px(getContext(), 8);
+		final int defaultInsetRight = SizeUtils.dp2Px(getContext(), 8);
+
+		if (attrs != null) {
+			TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.SlideBar);
+			try {
+				selectorDrawable = AppCompatResources.getDrawable(getContext(), a.getResourceId(R.styleable.SlideBar_selector, defaultSelectorDrawable));
+				borderColor = a.getColor(R.styleable.SlideBar_borderColor, defaultBorderColor);
+				borderSize = a.getDimensionPixelSize(R.styleable.SlideBar_borderSize, defaultBorderSize);
+				roundCorners = a.getBoolean(R.styleable.SlideBar_roundCorners, defaultRoundCorners);
+				int insetTop = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetTop, defaultInsetTop);
+				int insetBottom = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetBottom, defaultInsetBottom);
+				int insetLeft = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetLeft, defaultInsetLeft);
+				int insetRight = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetRight, defaultInsetRight);
+				insets = new Rect(insetLeft, insetTop, insetRight, insetBottom);
+			} finally {
+				a.recycle();
 			}
-			if (a.hasValue(R.styleable.BrightnessSlideBar_borderColor_BrightnessSlider)) {
-				borderColor = a.getColor(R.styleable.BrightnessSlideBar_borderColor_BrightnessSlider, borderColor);
-			}
-			if (a.hasValue(R.styleable.BrightnessSlideBar_borderSize_BrightnessSlider)) {
-				borderSize = a.getDimensionPixelSize(R.styleable.BrightnessSlideBar_borderSize_BrightnessSlider, borderSize);
-			}
-		} finally {
-			a.recycle();
+		} else {
+			selectorDrawable = AppCompatResources.getDrawable(getContext(), defaultSelectorDrawable);
+			borderColor = defaultBorderColor;
+			borderSize = defaultBorderSize;
+			roundCorners = defaultRoundCorners;
+			insets = new Rect(defaultInsetLeft, defaultInsetTop, defaultInsetRight, defaultInsetBottom);
 		}
-	}
 
-	private void onCreate() {
-		this.colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		this.borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-		this.borderPaint.setStyle(Paint.Style.STROKE);
-		this.borderPaint.setStrokeWidth(borderSize);
-		this.borderPaint.setColor(borderColor);
+		borderPaint.setStyle(Paint.Style.STROKE);
+		borderPaint.setStrokeWidth(borderSize);
+		borderPaint.setColor(borderColor);
+
 		setWillNotDraw(false);
 
-		selector = new ImageView(getContext());
-		if (selectorDrawable == null) {
-			selectorDrawable = AppCompatResources.getDrawable(getContext(), R.drawable.brightness_slider_thumb);
-		}
 		setSelectorDrawable(selectorDrawable);
 	}
 
@@ -123,20 +124,21 @@ public final class BrightnessSlideBar extends FrameLayout {
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		selector.setVisibility(enabled ? VISIBLE : INVISIBLE);
-		this.setClickable(enabled);
+		setClickable(enabled);
 	}
 
-	public void setBrightnessListener(BrightnessListener brightnessListener) {
-		this.brightnessListener = brightnessListener;
+	public void setListener(Listener listener) {
+		this.listener = listener;
 	}
 
-	public BrightnessListener getBrightnessListener() {
-		return brightnessListener;
+	public Listener getListener() {
+		return listener;
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
+
 		float width = getWidth();
 		float height = getHeight();
 
@@ -144,6 +146,12 @@ public final class BrightnessSlideBar extends FrameLayout {
 		float top = insets.top;
 		float right = width - insets.right;
 		float bottom = height - insets.bottom;
+
+		if (bgDirty && bgColors != null) {
+			Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), bgColors, null, Shader.TileMode.CLAMP);
+			colorPaint.setShader(shader);
+			bgDirty = false;
+		}
 
 		if (roundCorners) {
 			float radius = (bottom - top) / 2f;
@@ -156,15 +164,15 @@ public final class BrightnessSlideBar extends FrameLayout {
 	}
 
 	public void setBgColors(int[] colors) {
-		Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), colors, null, Shader.TileMode.CLAMP);
-		colorPaint.setShader(shader);
+		bgColors = colors;
+		bgDirty = true;
 		invalidate();
 	}
 
 	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (!this.isEnabled()) {
+		if (!isEnabled()) {
 			return false;
 		}
 
@@ -183,8 +191,8 @@ public final class BrightnessSlideBar extends FrameLayout {
 
 		int action = e.getAction();
 		if (action == MotionEvent.ACTION_DOWN) {
-			if (brightnessListener != null) {
-				brightnessListener.onUserStartedDragging();
+			if (listener != null) {
+				listener.onUserStartedDragging();
 			}
 
 			updateValue(x);
@@ -195,8 +203,8 @@ public final class BrightnessSlideBar extends FrameLayout {
 		} else if (action == MotionEvent.ACTION_UP) {
 			updateValue(x);
 
-			if (brightnessListener != null) {
-				brightnessListener.onUserStoppedDragging();
+			if (listener != null) {
+				listener.onUserStoppedDragging();
 			}
 		}
 	}
@@ -224,7 +232,7 @@ public final class BrightnessSlideBar extends FrameLayout {
 	}
 
 	public void setSelectorPosition(@FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
-		this.selectorPosition = Math.min(selectorPosition, 1.0f);
+		this.selectorPosition = Math.min(Math.max(selectorPosition, 0f), 1f);
 		selector.setX(getAvailableWidth() * this.selectorPosition);
 		fireListener(selectorPosition, false);
 	}
@@ -269,16 +277,6 @@ public final class BrightnessSlideBar extends FrameLayout {
 	}
 
 	/**
-	 * sets a color resource of the slider border.
-	 *
-	 * @param resource color resource of the slider border.
-	 */
-	public void setBorderColorRes(@ColorRes int resource) {
-		int color = ContextCompat.getColor(getContext(), resource);
-		setBorderColor(color);
-	}
-
-	/**
 	 * sets a size of the slide border.
 	 *
 	 * @param borderSize ize of the slide border.
@@ -300,17 +298,9 @@ public final class BrightnessSlideBar extends FrameLayout {
 	}
 
 	private void fireListener(@FloatRange(from = 0f, to = 1f) float selectorPosition, boolean fromUser) {
-		if (brightnessListener != null) {
-			brightnessListener.onBrightnessSelected(selectorPosition, fromUser);
+		if (listener != null) {
+			listener.onValueChanged(selectorPosition, fromUser);
 		}
-	}
-
-	@ColorInt
-	public int assembleColor() {
-		float[] hsv = new float[3];
-		Color.colorToHSV(color, hsv);
-		hsv[2] = selectorPosition;
-		return Color.HSVToColor(hsv);
 	}
 
 	/**
@@ -318,6 +308,7 @@ public final class BrightnessSlideBar extends FrameLayout {
 	 *
 	 * @return selector's position ratio.
 	 */
+	@FloatRange(from = 0f, to = 1f)
 	public float getSelectorPosition() {
 		return this.selectorPosition;
 	}

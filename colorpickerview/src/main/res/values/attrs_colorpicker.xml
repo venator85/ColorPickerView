@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <attr name="selector" format="reference" />
+
   <declare-styleable name="ColorPickerView">
     <!-- sets a drawable of the palette. the default palette is HSV drawable palette built by HSV (hue, saturation, value) color model. -->
     <attr name="palette" format="reference" />
     <!-- sets a drawable of the selector. -->
-    <attr name="selector" format="integer" />
+    <attr name="selector" />
     <!-- sets a width/height square size of the selector. -->
     <attr name="selector_size" format="dimension" />
     <!-- sets an alpha of thr selector. -->
@@ -27,28 +29,15 @@
       <enum name="last" value="1" />
     </attr>
   </declare-styleable>
-  <declare-styleable name="AlphaSlideBar">
-    <!-- sets a customized selector drawable. -->
-    <attr name="selector_AlphaSlideBar" format="reference" />
-    <!-- sets a color of the border. -->
-    <attr name="borderColor_AlphaSlideBar" format="color" />
-    <!-- sets a size of the border. -->
-    <attr name="borderSize_AlphaSlideBar" format="dimension|reference" />
-  </declare-styleable>
-  <declare-styleable name="BrightnessSlideBar">
-    <!-- sets a customized selector drawable. -->
-    <attr name="selector_BrightnessSlider" format="reference" />
-    <!-- sets a color of the border. -->
-    <attr name="borderColor_BrightnessSlider" format="color" />
-    <!-- sets a size of the border. -->
-    <attr name="borderSize_BrightnessSlider" format="dimension|reference" />
-  </declare-styleable>
-  <declare-styleable name="AlphaTileView">
-    <!-- sets width/height square size of the title. -->
-    <attr name="tileSize" format="integer" />
-    <!-- a color of the odd location in patterns. -->
-    <attr name="tileOddColor" format="color" />
-    <!-- a color of the even location in patterns. -->
-    <attr name="tileEvenColor" format="color" />
+
+  <declare-styleable name="SlideBar">
+    <attr name="selector" />
+    <attr name="borderColor" format="color|reference" />
+    <attr name="borderSize" format="dimension|reference" />
+    <attr name="roundCorners" format="boolean|reference" />
+    <attr name="bgInsetTop" format="dimension|reference" />
+    <attr name="bgInsetBottom" format="dimension|reference" />
+    <attr name="bgInsetLeft" format="dimension|reference" />
+    <attr name="bgInsetRight" format="dimension|reference" />
   </declare-styleable>
 </resources>
