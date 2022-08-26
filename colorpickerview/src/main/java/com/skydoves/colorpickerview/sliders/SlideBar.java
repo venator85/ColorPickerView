@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.ViewKt;
 
 import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.SizeUtils;
@@ -233,7 +234,10 @@ public final class SlideBar extends FrameLayout {
 
 	public void setSelectorPosition(@FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
 		this.selectorPosition = Math.min(Math.max(selectorPosition, 0f), 1f);
-		selector.setX(getAvailableWidth() * this.selectorPosition);
+		ViewKt.doOnLayout(this, view -> {
+			selector.setX(getAvailableWidth() * this.selectorPosition);
+			return null;
+		});
 		fireListener(selectorPosition, false);
 	}
 
