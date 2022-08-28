@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
@@ -54,6 +55,13 @@ public final class SlideBar extends FrameLayout {
 
 	private int[] bgColors;
 	private boolean bgDirty;
+
+	private int trackColor;
+	private int trackProgressColor;
+
+	private final Path path = new Path();
+	private float[] cornersLeft;
+	private float[] cornersRight;
 
 	private Rect insets = new Rect();
 
@@ -148,25 +156,79 @@ public final class SlideBar extends FrameLayout {
 		float right = width - insets.right;
 		float bottom = height - insets.bottom;
 
-		if (bgDirty && bgColors != null) {
-			Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), bgColors, null, Shader.TileMode.CLAMP);
-			colorPaint.setShader(shader);
-			bgDirty = false;
-		}
+		if (bgColors != null) {
+			if (bgDirty) {
+				Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), bgColors, null, Shader.TileMode.CLAMP);
+				colorPaint.setShader(shader);
+				bgDirty = false;
+			}
 
-		if (roundCorners) {
-			float radius = (bottom - top) / 2f;
-			canvas.drawRoundRect(left, top, right, bottom, radius, radius, colorPaint);
-			canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
+			if (roundCorners) {
+				float radius = (bottom - top) / 2f;
+				canvas.drawRoundRect(left, top, right, bottom, radius, radius, colorPaint);
+				canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
+			} else {
+				canvas.drawRect(left, top, right, bottom, colorPaint);
+				canvas.drawRect(left, top, right, bottom, borderPaint);
+			}
+
 		} else {
-			canvas.drawRect(left, top, right, bottom, colorPaint);
-			canvas.drawRect(left, top, right, bottom, borderPaint);
+			int progressEnd = (int) (selector.getX() + selector.getWidth() / 2f);
+
+			if (roundCorners) {
+                float radius = (bottom - top) / 2f;
+
+                if (bgDirty) {
+                    cornersLeft = new float[]{
+                            radius, radius, // Top, left in px
+                            0, 0, // Top, right in px
+                            0, 0, // Bottom, right in px
+                            radius, radius // Bottom,left in px
+                    };
+                    cornersRight = new float[]{
+                            0, 0, // Top, left in px
+                            radius, radius, // Top, right in px
+                            radius, radius, // Bottom, right in px
+                            0, 0 // Bottom,left in px
+                    };
+                    bgDirty = false;
+                }
+
+				path.reset();
+				path.addRoundRect(left, top, progressEnd, bottom, cornersLeft, Path.Direction.CW);
+				colorPaint.setColor(trackProgressColor);
+				canvas.drawPath(path, colorPaint);
+
+				path.reset();
+				path.addRoundRect(progressEnd, top, right, bottom, cornersRight, Path.Direction.CW);
+				colorPaint.setColor(trackColor);
+				canvas.drawPath(path, colorPaint);
+
+				canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
+
+            } else {
+				colorPaint.setColor(trackProgressColor);
+				canvas.drawRect(left, top, progressEnd, bottom, colorPaint);
+
+				colorPaint.setColor(trackColor);
+				canvas.drawRect(progressEnd, top, right, bottom, colorPaint);
+
+				canvas.drawRect(left, top, right, bottom, borderPaint);
+			}
 		}
 	}
 
 	public void setBgColors(int[] colors) {
 		bgColors = colors;
 		bgDirty = true;
+		invalidate();
+	}
+
+	public void setBgColorsWithTrackProgress(@ColorInt int trackProgressColor, @ColorInt int trackColor) {
+		bgColors = null;
+		bgDirty = true;
+		this.trackColor = trackColor;
+		this.trackProgressColor = trackProgressColor;
 		invalidate();
 	}
 
@@ -225,6 +287,9 @@ public final class SlideBar extends FrameLayout {
 		selectorPosition = newVal;
 
 		selector.setX(getAvailableWidth() * selectorPosition);
+		if (bgColors == null) {
+			invalidate();
+		}
 		fireListener(selectorPosition, true);
 	}
 
@@ -236,6 +301,9 @@ public final class SlideBar extends FrameLayout {
 		this.selectorPosition = Math.min(Math.max(selectorPosition, 0f), 1f);
 		ViewKt.doOnLayout(this, view -> {
 			selector.setX(getAvailableWidth() * this.selectorPosition);
+            if (bgColors == null) {
+                invalidate();
+            }
 			return null;
 		});
 		fireListener(selectorPosition, false);
