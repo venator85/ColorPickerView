@@ -147,6 +147,9 @@ public final class SlideBar extends FrameLayout {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
+		if (isInEditMode()) {
+			return;
+		}
 
 		float width = getWidth();
 		float height = getHeight();
