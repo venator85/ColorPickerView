@@ -32,153 +32,157 @@ import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.SizeUtils;
 
 public final class SlideBar extends FrameLayout {
-	public interface Listener {
-		default void onUserStartedDragging() {
-		}
+    public interface Listener {
+        default void onUserStartedDragging() {
+        }
 
-		default void onUserStoppedDragging() {
-		}
+        default void onUserStoppedDragging() {
+        }
 
-		void onValueChanged(@FloatRange(from = 0f, to = 1f) float value, boolean fromUser);
-	}
+        void onValueChanged(@FloatRange(from = 0f, to = 1f) float value, boolean fromUser);
+    }
 
-	private final Paint colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint colorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-	private float selectorPosition = 0.5f;
-	private Drawable selectorDrawable;
-	private final ImageView selector = new ImageView(getContext());
+    private float selectorPositionIn01;
 
-	private int borderSize;
-	private int borderColor;
-	private boolean roundCorners;
+    private float touchDownX;
+    private float touchDownSelectorPositionIn01;
 
-	private int[] bgColors;
-	private boolean bgDirty;
+    private Drawable selectorDrawable;
+    private final ImageView selector = new ImageView(getContext());
 
-	private int trackColor;
-	private int trackProgressColor;
+    private int borderSize;
+    private int borderColor;
+    private boolean roundCorners;
 
-	private final Path path = new Path();
-	private float[] cornersLeft;
-	private float[] cornersRight;
+    private int[] bgColors;
+    private boolean bgDirty;
 
-	private Rect insets = new Rect();
+    private int trackColor;
+    private int trackProgressColor;
 
-	private Listener listener;
+    private final Path path = new Path();
+    private float[] cornersLeft;
+    private float[] cornersRight;
 
-	public SlideBar(Context context) {
-		super(context);
-		init(null);
-	}
+    private Rect insets = new Rect();
 
-	public SlideBar(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		init(attrs);
-	}
+    private Listener listener;
 
-	public SlideBar(Context context, AttributeSet attrs, int defStyleAttr) {
-		super(context, attrs, defStyleAttr);
-		init(attrs);
-	}
+    public SlideBar(Context context) {
+        super(context);
+        init(null);
+    }
 
-	public SlideBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-		super(context, attrs, defStyleAttr, defStyleRes);
-		init(attrs);
-	}
+    public SlideBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(attrs);
+    }
 
-	private void init(@Nullable AttributeSet attrs) {
-		final int defaultBorderSize = SizeUtils.dp2Px(getContext(), 1);
-		final int defaultSelectorDrawable = R.drawable.brightness_slider_thumb;
-		final int defaultBorderColor = Color.BLACK;
-		final boolean defaultRoundCorners = true;
-		final int defaultInsetTop = SizeUtils.dp2Px(getContext(), 8);
-		final int defaultInsetBottom = SizeUtils.dp2Px(getContext(), 8);
-		final int defaultInsetLeft = SizeUtils.dp2Px(getContext(), 8);
-		final int defaultInsetRight = SizeUtils.dp2Px(getContext(), 8);
+    public SlideBar(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(attrs);
+    }
 
-		if (attrs != null) {
-			TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.SlideBar);
-			try {
-				selectorDrawable = AppCompatResources.getDrawable(getContext(), a.getResourceId(R.styleable.SlideBar_selector, defaultSelectorDrawable));
-				borderColor = a.getColor(R.styleable.SlideBar_borderColor, defaultBorderColor);
-				borderSize = a.getDimensionPixelSize(R.styleable.SlideBar_borderSize, defaultBorderSize);
-				roundCorners = a.getBoolean(R.styleable.SlideBar_roundCorners, defaultRoundCorners);
-				int insetTop = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetTop, defaultInsetTop);
-				int insetBottom = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetBottom, defaultInsetBottom);
-				int insetLeft = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetLeft, defaultInsetLeft);
-				int insetRight = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetRight, defaultInsetRight);
-				insets = new Rect(insetLeft, insetTop, insetRight, insetBottom);
-			} finally {
-				a.recycle();
-			}
-		} else {
-			selectorDrawable = AppCompatResources.getDrawable(getContext(), defaultSelectorDrawable);
-			borderColor = defaultBorderColor;
-			borderSize = defaultBorderSize;
-			roundCorners = defaultRoundCorners;
-			insets = new Rect(defaultInsetLeft, defaultInsetTop, defaultInsetRight, defaultInsetBottom);
-		}
+    public SlideBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        init(attrs);
+    }
 
-		borderPaint.setStyle(Paint.Style.STROKE);
-		borderPaint.setStrokeWidth(borderSize);
-		borderPaint.setColor(borderColor);
+    private void init(@Nullable AttributeSet attrs) {
+        final int defaultBorderSize = SizeUtils.dp2Px(getContext(), 1);
+        final int defaultSelectorDrawable = R.drawable.brightness_slider_thumb;
+        final int defaultBorderColor = Color.BLACK;
+        final boolean defaultRoundCorners = true;
+        final int defaultInsetTop = SizeUtils.dp2Px(getContext(), 8);
+        final int defaultInsetBottom = SizeUtils.dp2Px(getContext(), 8);
+        final int defaultInsetLeft = SizeUtils.dp2Px(getContext(), 8);
+        final int defaultInsetRight = SizeUtils.dp2Px(getContext(), 8);
 
-		setWillNotDraw(false);
+        if (attrs != null) {
+            TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.SlideBar);
+            try {
+                selectorDrawable = AppCompatResources.getDrawable(getContext(), a.getResourceId(R.styleable.SlideBar_selector, defaultSelectorDrawable));
+                borderColor = a.getColor(R.styleable.SlideBar_borderColor, defaultBorderColor);
+                borderSize = a.getDimensionPixelSize(R.styleable.SlideBar_borderSize, defaultBorderSize);
+                roundCorners = a.getBoolean(R.styleable.SlideBar_roundCorners, defaultRoundCorners);
+                int insetTop = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetTop, defaultInsetTop);
+                int insetBottom = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetBottom, defaultInsetBottom);
+                int insetLeft = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetLeft, defaultInsetLeft);
+                int insetRight = a.getDimensionPixelSize(R.styleable.SlideBar_bgInsetRight, defaultInsetRight);
+                insets = new Rect(insetLeft, insetTop, insetRight, insetBottom);
+            } finally {
+                a.recycle();
+            }
+        } else {
+            selectorDrawable = AppCompatResources.getDrawable(getContext(), defaultSelectorDrawable);
+            borderColor = defaultBorderColor;
+            borderSize = defaultBorderSize;
+            roundCorners = defaultRoundCorners;
+            insets = new Rect(defaultInsetLeft, defaultInsetTop, defaultInsetRight, defaultInsetBottom);
+        }
 
-		setSelectorDrawable(selectorDrawable);
-	}
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(borderSize);
+        borderPaint.setColor(borderColor);
 
-	@Override
-	public void setEnabled(boolean enabled) {
-		super.setEnabled(enabled);
-		selector.setVisibility(enabled ? VISIBLE : INVISIBLE);
-		setClickable(enabled);
-	}
+        setWillNotDraw(false);
 
-	public void setListener(Listener listener) {
-		this.listener = listener;
-	}
+        setSelectorDrawable(selectorDrawable);
+    }
 
-	public Listener getListener() {
-		return listener;
-	}
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        selector.setVisibility(enabled ? VISIBLE : INVISIBLE);
+        setClickable(enabled);
+    }
 
-	@Override
-	protected void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
-		if (isInEditMode()) {
-			return;
-		}
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
 
-		float width = getWidth();
-		float height = getHeight();
+    public Listener getListener() {
+        return listener;
+    }
 
-		float left = insets.left;
-		float top = insets.top;
-		float right = width - insets.right;
-		float bottom = height - insets.bottom;
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        if (isInEditMode()) {
+            return;
+        }
 
-		if (bgColors != null) {
-			if (bgDirty) {
-				Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), bgColors, null, Shader.TileMode.CLAMP);
-				colorPaint.setShader(shader);
-				bgDirty = false;
-			}
+        float width = getWidth();
+        float height = getHeight();
 
-			if (roundCorners) {
-				float radius = (bottom - top) / 2f;
-				canvas.drawRoundRect(left, top, right, bottom, radius, radius, colorPaint);
-				canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
-			} else {
-				canvas.drawRect(left, top, right, bottom, colorPaint);
-				canvas.drawRect(left, top, right, bottom, borderPaint);
-			}
+        float left = insets.left;
+        float top = insets.top;
+        float right = width - insets.right;
+        float bottom = height - insets.bottom;
 
-		} else {
-			int progressEnd = (int) (selector.getX() + selector.getWidth() / 2f);
+        if (bgColors != null) {
+            if (bgDirty) {
+                Shader shader = new LinearGradient(0, 0, getWidth(), getHeight(), bgColors, null, Shader.TileMode.CLAMP);
+                colorPaint.setShader(shader);
+                bgDirty = false;
+            }
 
-			if (roundCorners) {
+            if (roundCorners) {
+                float radius = (bottom - top) / 2f;
+                canvas.drawRoundRect(left, top, right, bottom, radius, radius, colorPaint);
+                canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
+            } else {
+                canvas.drawRect(left, top, right, bottom, colorPaint);
+                canvas.drawRect(left, top, right, bottom, borderPaint);
+            }
+
+        } else {
+            int progressEnd = (int) (selector.getX() + selector.getWidth() / 2f);
+
+            if (roundCorners) {
                 float radius = (bottom - top) / 2f;
 
                 if (bgDirty) {
@@ -197,211 +201,204 @@ public final class SlideBar extends FrameLayout {
                     bgDirty = false;
                 }
 
-				path.reset();
-				path.addRoundRect(left, top, progressEnd, bottom, cornersLeft, Path.Direction.CW);
-				colorPaint.setColor(trackProgressColor);
-				canvas.drawPath(path, colorPaint);
+                path.reset();
+                path.addRoundRect(left, top, progressEnd, bottom, cornersLeft, Path.Direction.CW);
+                colorPaint.setColor(trackProgressColor);
+                canvas.drawPath(path, colorPaint);
 
-				path.reset();
-				path.addRoundRect(progressEnd, top, right, bottom, cornersRight, Path.Direction.CW);
-				colorPaint.setColor(trackColor);
-				canvas.drawPath(path, colorPaint);
+                path.reset();
+                path.addRoundRect(progressEnd, top, right, bottom, cornersRight, Path.Direction.CW);
+                colorPaint.setColor(trackColor);
+                canvas.drawPath(path, colorPaint);
 
-				canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
+                canvas.drawRoundRect(left, top, right, bottom, radius, radius, borderPaint);
 
             } else {
-				colorPaint.setColor(trackProgressColor);
-				canvas.drawRect(left, top, progressEnd, bottom, colorPaint);
+                colorPaint.setColor(trackProgressColor);
+                canvas.drawRect(left, top, progressEnd, bottom, colorPaint);
 
-				colorPaint.setColor(trackColor);
-				canvas.drawRect(progressEnd, top, right, bottom, colorPaint);
+                colorPaint.setColor(trackColor);
+                canvas.drawRect(progressEnd, top, right, bottom, colorPaint);
 
-				canvas.drawRect(left, top, right, bottom, borderPaint);
-			}
-		}
-	}
+                canvas.drawRect(left, top, right, bottom, borderPaint);
+            }
+        }
+    }
 
-	public void setBgColors(int[] colors) {
-		bgColors = colors;
-		bgDirty = true;
-		invalidate();
-	}
+    public void setBgColors(int[] colors) {
+        bgColors = colors;
+        bgDirty = true;
+        invalidate();
+    }
 
-	public void setBgColorsWithTrackProgress(@ColorInt int trackProgressColor, @ColorInt int trackColor) {
-		bgColors = null;
-		bgDirty = true;
-		this.trackColor = trackColor;
-		this.trackProgressColor = trackProgressColor;
-		invalidate();
-	}
+    public void setBgColorsWithTrackProgress(@ColorInt int trackProgressColor, @ColorInt int trackColor) {
+        bgColors = null;
+        bgDirty = true;
+        this.trackColor = trackColor;
+        this.trackProgressColor = trackProgressColor;
+        invalidate();
+    }
 
-	@SuppressLint("ClickableViewAccessibility")
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		if (!isEnabled()) {
-			return false;
-		}
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (!isEnabled()) {
+            return false;
+        }
 
-		int actionMasked = event.getActionMasked();
-		if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_DOWN || actionMasked == MotionEvent.ACTION_MOVE) {
-			selector.setPressed(true);
-			onTouchReceived(event);
-			return true;
-		}
-		selector.setPressed(false);
-		return false;
-	}
+        int actionMasked = event.getActionMasked();
+        if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_DOWN || actionMasked == MotionEvent.ACTION_MOVE) {
+            selector.setPressed(true);
+            onTouchReceived(event);
+            return true;
+        }
+        selector.setPressed(false);
+        return false;
+    }
 
-	private void onTouchReceived(MotionEvent e) {
-		float x = e.getX();
+    private void onTouchReceived(MotionEvent e) {
+        float x = e.getX();
 
-		int action = e.getAction();
-		if (action == MotionEvent.ACTION_DOWN) {
-			if (listener != null) {
-				listener.onUserStartedDragging();
-			}
+        int action = e.getAction();
+        if (action == MotionEvent.ACTION_DOWN) {
+            if (listener != null) {
+                listener.onUserStartedDragging();
+            }
+            touchDownX = x;
+            touchDownSelectorPositionIn01 = selectorPositionIn01;
 
-			updateValue(x);
+        } else if (action == MotionEvent.ACTION_MOVE) {
+            updateValue(x);
 
-		} else if (action == MotionEvent.ACTION_MOVE) {
-			updateValue(x);
+        } else if (action == MotionEvent.ACTION_UP) {
+            if (listener != null) {
+                listener.onUserStoppedDragging();
+            }
+        }
+    }
 
-		} else if (action == MotionEvent.ACTION_UP) {
-			updateValue(x);
+    private void updateValue(float touchX) {
+        float delta = touchX - touchDownX;
+        float w = getAvailableWidth();
 
-			if (listener != null) {
-				listener.onUserStoppedDragging();
-			}
-		}
-	}
+        float newVal = touchDownSelectorPositionIn01 + delta / w;
+        newVal = Math.min(Math.max(newVal, 0f), 1f);
+        selectorPositionIn01 = newVal;
 
-	private void updateValue(float x) {
-		float touchXCenteredInSelector = x - getSelectorSize() / 2f;
-		float w = getAvailableWidth();
+        float selectorX = w * selectorPositionIn01;
+        selector.setX(selectorX);
+        if (bgColors == null) {
+            invalidate();
+        }
+        fireListener(selectorPositionIn01, true);
+    }
 
-		float newVal;
-		if (touchXCenteredInSelector <= 0) {
-			newVal = 0f;
-		} else if (touchXCenteredInSelector > w) {
-			newVal = 1f;
-		} else {
-			newVal = touchXCenteredInSelector / w;
-		}
-		selectorPosition = newVal;
+    private float getAvailableWidth() {
+        return getWidth() - getSelectorSize();
+    }
 
-		selector.setX(getAvailableWidth() * selectorPosition);
-		if (bgColors == null) {
-			invalidate();
-		}
-		fireListener(selectorPosition, true);
-	}
-
-	private float getAvailableWidth() {
-		return getWidth() - getSelectorSize();
-	}
-
-	public void setSelectorPosition(@FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
-		this.selectorPosition = Math.min(Math.max(selectorPosition, 0f), 1f);
-		ViewKt.doOnLayout(this, view -> {
-			selector.setX(getAvailableWidth() * this.selectorPosition);
+    public void setSelectorPosition(@FloatRange(from = 0.0, to = 1.0) float selectorPosition) {
+        this.selectorPositionIn01 = Math.min(Math.max(selectorPosition, 0f), 1f);
+        ViewKt.doOnLayout(this, view -> {
+            selector.setX(getAvailableWidth() * this.selectorPositionIn01);
             if (bgColors == null) {
                 invalidate();
             }
-			return null;
-		});
-		fireListener(selectorPosition, false);
-	}
+            return null;
+        });
+        fireListener(selectorPosition, false);
+    }
 
-	private int getSelectorSize() {
-		return selector.getWidth();
-	}
+    private int getSelectorSize() {
+        return selector.getWidth();
+    }
 
-	/**
-	 * sets a drawable of the selector.
-	 *
-	 * @param drawable drawable of the selector.
-	 */
-	public void setSelectorDrawable(Drawable drawable) {
-		removeView(selector);
-		this.selectorDrawable = drawable;
-		this.selector.setImageDrawable(drawable);
-		FrameLayout.LayoutParams thumbParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		thumbParams.gravity = Gravity.CENTER_VERTICAL;
-		addView(selector, thumbParams);
-	}
+    /**
+     * sets a drawable of the selector.
+     *
+     * @param drawable drawable of the selector.
+     */
+    public void setSelectorDrawable(Drawable drawable) {
+        removeView(selector);
+        this.selectorDrawable = drawable;
+        this.selector.setImageDrawable(drawable);
+        FrameLayout.LayoutParams thumbParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        thumbParams.gravity = Gravity.CENTER_VERTICAL;
+        addView(selector, thumbParams);
+    }
 
-	/**
-	 * sets a drawable resource of the selector.
-	 *
-	 * @param resource a drawable resource of the selector.
-	 */
-	public void setSelectorDrawableRes(@DrawableRes int resource) {
-		Drawable drawable = ResourcesCompat.getDrawable(getContext().getResources(), resource, null);
-		setSelectorDrawable(drawable);
-	}
+    /**
+     * sets a drawable resource of the selector.
+     *
+     * @param resource a drawable resource of the selector.
+     */
+    public void setSelectorDrawableRes(@DrawableRes int resource) {
+        Drawable drawable = ResourcesCompat.getDrawable(getContext().getResources(), resource, null);
+        setSelectorDrawable(drawable);
+    }
 
-	/**
-	 * sets a color of the slider border.
-	 *
-	 * @param color color of the slider border.
-	 */
-	public void setBorderColor(@ColorInt int color) {
-		this.borderColor = color;
-		this.borderPaint.setColor(color);
-		invalidate();
-	}
+    /**
+     * sets a color of the slider border.
+     *
+     * @param color color of the slider border.
+     */
+    public void setBorderColor(@ColorInt int color) {
+        this.borderColor = color;
+        this.borderPaint.setColor(color);
+        invalidate();
+    }
 
-	/**
-	 * sets a size of the slide border.
-	 *
-	 * @param borderSize ize of the slide border.
-	 */
-	public void setBorderSize(int borderSize) {
-		this.borderSize = borderSize;
-		this.borderPaint.setStrokeWidth(borderSize);
-		invalidate();
-	}
+    /**
+     * sets a size of the slide border.
+     *
+     * @param borderSize ize of the slide border.
+     */
+    public void setBorderSize(int borderSize) {
+        this.borderSize = borderSize;
+        this.borderPaint.setStrokeWidth(borderSize);
+        invalidate();
+    }
 
-	/**
-	 * sets a size of the slide border using dimension resource.
-	 *
-	 * @param resource a size of the slide border.
-	 */
-	public void setBorderSizeRes(@DimenRes int resource) {
-		int borderSize = (int) getContext().getResources().getDimension(resource);
-		setBorderSize(borderSize);
-	}
+    /**
+     * sets a size of the slide border using dimension resource.
+     *
+     * @param resource a size of the slide border.
+     */
+    public void setBorderSizeRes(@DimenRes int resource) {
+        int borderSize = (int) getContext().getResources().getDimension(resource);
+        setBorderSize(borderSize);
+    }
 
-	private void fireListener(@FloatRange(from = 0f, to = 1f) float selectorPosition, boolean fromUser) {
-		if (listener != null) {
-			listener.onValueChanged(selectorPosition, fromUser);
-		}
-	}
+    private void fireListener(@FloatRange(from = 0f, to = 1f) float selectorPosition, boolean fromUser) {
+        if (listener != null) {
+            listener.onValueChanged(selectorPosition, fromUser);
+        }
+    }
 
-	/**
-	 * gets selector's position ratio.
-	 *
-	 * @return selector's position ratio.
-	 */
-	@FloatRange(from = 0f, to = 1f)
-	public float getSelectorPosition() {
-		return this.selectorPosition;
-	}
+    /**
+     * gets selector's position ratio.
+     *
+     * @return selector's position ratio.
+     */
+    @FloatRange(from = 0f, to = 1f)
+    public float getSelectorPosition() {
+        return this.selectorPositionIn01;
+    }
 
-	public void setRoundCorners(boolean roundCorners) {
-		this.roundCorners = roundCorners;
-		invalidate();
-	}
+    public void setRoundCorners(boolean roundCorners) {
+        this.roundCorners = roundCorners;
+        invalidate();
+    }
 
-	public boolean isRoundCorners() {
-		return roundCorners;
-	}
+    public boolean isRoundCorners() {
+        return roundCorners;
+    }
 
-	public void setInsets(@NonNull Rect insets) {
-		this.insets = insets;
-	}
+    public void setInsets(@NonNull Rect insets) {
+        this.insets = insets;
+    }
 
-	public Rect getInsets() {
-		return insets;
-	}
+    public Rect getInsets() {
+        return insets;
+    }
 }
