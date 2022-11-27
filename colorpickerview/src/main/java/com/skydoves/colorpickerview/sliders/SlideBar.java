@@ -11,6 +11,7 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -30,6 +31,9 @@ import androidx.core.view.ViewKt;
 
 import com.skydoves.colorpickerview.R;
 import com.skydoves.colorpickerview.SizeUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class SlideBar extends FrameLayout {
     public interface Listener {
@@ -68,6 +72,9 @@ public final class SlideBar extends FrameLayout {
     private float[] cornersRight;
 
     private Rect insets = new Rect();
+
+    private final List<Rect> systemGestureExclusionRects = new ArrayList<>(1);
+    private final Rect systemGestureExclusionRect = new Rect(0, 0, 0, 0);
 
     private Listener listener;
 
@@ -222,6 +229,17 @@ public final class SlideBar extends FrameLayout {
 
                 canvas.drawRect(left, top, right, bottom, borderPaint);
             }
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            systemGestureExclusionRect.set(0, 0, getWidth(), getHeight());
+            systemGestureExclusionRects.clear();
+            systemGestureExclusionRects.add(systemGestureExclusionRect);
+            setSystemGestureExclusionRects(systemGestureExclusionRects);
         }
     }
 
